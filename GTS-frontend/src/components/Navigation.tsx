@@ -38,7 +38,7 @@ export const Navigation = () => {
               <Candy className="w-6 h-6" />
             </motion.div>
             <span className="text-2xl font-black tracking-tighter uppercase italic">
-              Sweet<span className="text-pink-500">Shop</span>
+              Sugar<span className="text-pink-500">Rush</span>
             </span>
           </Link>
 
