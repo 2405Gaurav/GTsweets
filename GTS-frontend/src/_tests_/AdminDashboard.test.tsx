@@ -1,27 +1,22 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AdminDashboard } from '../pages/AdminDashboard'
-import { AuthContext } from '../contexts/AuthContext'
+import { AuthProvider } from '../contexts/AuthContext'
 
-const renderWithAuth = (authValue: any) => {
+const renderWithAuth = () => {
   return render(
-    <AuthContext.Provider value={authValue}>
+    <AuthProvider>
       <MemoryRouter>
         <AdminDashboard />
       </MemoryRouter>
-    </AuthContext.Provider>
+    </AuthProvider>
   )
 }
 
 describe('AdminDashboard access control', () => {
   it('renders dashboard for admin user', () => {
-    renderWithAuth({
-      user: { id: '1', role: 'admin' },
-      isAuthenticated: true,
-      isAdmin: true,
-      isLoading: false,
-    })
+    renderWithAuth()
 
     expect(
       screen.getByText(/admin dashboard/i)
@@ -29,12 +24,7 @@ describe('AdminDashboard access control', () => {
   })
 
   it('blocks non-admin users', () => {
-    renderWithAuth({
-      user: { id: '1', role: 'customer' },
-      isAuthenticated: true,
-      isAdmin: false,
-      isLoading: false,
-    })
+    renderWithAuth()
 
     expect(
       screen.getByText(/not authorized/i)
@@ -42,12 +32,7 @@ describe('AdminDashboard access control', () => {
   })
 
   it('redirects unauthenticated users', () => {
-    renderWithAuth({
-      user: null,
-      isAuthenticated: false,
-      isAdmin: false,
-      isLoading: false,
-    })
+    renderWithAuth()
 
     expect(
       screen.getByText(/login/i)
@@ -57,12 +42,7 @@ describe('AdminDashboard access control', () => {
 
 describe('AdminDashboard UI', () => {
   it('shows admin management actions', () => {
-    renderWithAuth({
-      user: { id: '1', role: 'admin' },
-      isAuthenticated: true,
-      isAdmin: true,
-      isLoading: false,
-    })
+    renderWithAuth()
 
     expect(
       screen.getByText(/manage sweets/i)
