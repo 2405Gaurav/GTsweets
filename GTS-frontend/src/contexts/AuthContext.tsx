@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react'
 import { authApi } from '../services/api';
 import type { User, LoginRequest, RegisterRequest } from '../types';
@@ -15,6 +15,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -24,18 +25,16 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
+  // Use lazy initialization to read from localStorage only once
+  const [user, setUser] = useState<User | null>(() => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-
+    
     if (token && storedUser) {
-      setUser(JSON.parse(storedUser));
+      return JSON.parse(storedUser);
     }
-    setIsLoading(false);
-  }, []);
+    return null;
+  });
 
   const login = async (data: LoginRequest) => {
     const response = await authApi.login(data);
@@ -60,7 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     user,
     isAuthenticated: !!user,
-    isLoading,
+    isLoading: false,
     login,
     register,
     logout,
