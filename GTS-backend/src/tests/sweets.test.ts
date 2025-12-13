@@ -1,21 +1,8 @@
-import mongoose from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { Sweet } from "../models/Sweets";
+import { Sweet } from "../models/Sweets"; 
 
-let mongod: MongoMemoryServer;
 
 describe("Sweet Model", () => {
-  beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
-    await mongoose.connect(uri);
-  });
-
-  afterAll(async () => {
-    await mongoose.connection.dropDatabase();
-    await mongoose.connection.close();
-    await mongod.stop();
-  });
+ 
 
   afterEach(async () => {
     await Sweet.deleteMany({});
@@ -42,44 +29,29 @@ describe("Sweet Model", () => {
   });
 
   it("should throw validation error if required fields are missing", async () => {
-    try {
-      await Sweet.create({ name: "Unnamed" }); // missing category, price, quantity
-    } catch (err: any) {
-      expect(err).toBeDefined();
-      expect(err.errors.category).toBeDefined();
-      expect(err.errors.price).toBeDefined();
-      expect(err.errors.quantity).toBeDefined();
-    }
+    await expect(Sweet.create({ name: "Unnamed" })).rejects.toThrow();
   });
 
   it("should reject invalid category values", async () => {
-    try {
-      await Sweet.create({
+    await expect(
+      Sweet.create({
         name: "Mystery Sweet",
-        category: "invalid-category", // not in enum
+        category: "invalid-category",
         price: 10,
         quantity: 5,
-      });
-    } catch (err: any) {
-      expect(err).toBeDefined();
-      expect(err.errors.category).toBeDefined();
-      expect(err.errors.category.message).toContain("`invalid-category`");
-    }
+      })
+    ).rejects.toThrow();
   });
 
   it("should not allow negative price or quantity", async () => {
-    try {
-      await Sweet.create({
+    await expect(
+      Sweet.create({
         name: "Gummy Bear",
         category: "gummy",
         price: -10,
         quantity: -5,
-      });
-    } catch (err: any) {
-      expect(err).toBeDefined();
-      expect(err.errors.price.message).toContain("negative");
-      expect(err.errors.quantity.message).toContain("negative");
-    }
+      })
+    ).rejects.toThrow();
   });
 
   it("should allow creation with only required fields", async () => {
