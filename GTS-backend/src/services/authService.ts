@@ -18,15 +18,31 @@ export interface AuthResponse {
   token: string;
 }
 
+// Email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const registerUser = async (payload: AuthPayload): Promise<AuthResponse> => {
-  const existingUser = await User.findOne({ email: payload.email });
+  // Normalize email (trim and lowercase)
+  const normalizedEmail = payload.email.trim().toLowerCase();
+
+  // Validate email format
+  if (!emailRegex.test(normalizedEmail)) {
+    const error = new Error('Invalid email format');
+    (error as any).statusCode = 400;
+    throw error;
+  }
+
+  // Check if email already exists
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
-    throw new Error('Email already registered');
+    const error = new Error('Email already registered');
+    (error as any).statusCode = 500;
+    throw error;
   }
 
   const user = new User({
     name: payload.name,
-    email: payload.email,
+    email: normalizedEmail,
     password: payload.password,
     role: payload.role || 'customer',
   });
@@ -49,15 +65,24 @@ export const loginUser = async (
   email: string,
   password: string
 ): Promise<AuthResponse> => {
-  const user = await User.findOne({ email }).select('+password');
+  // Normalize email (trim and lowercase)
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Find user and include password field
+  const user = await User.findOne({ email: normalizedEmail }).select('+password');
 
   if (!user) {
-    throw new Error('Invalid email or password');
+    const error = new Error('Invalid email or password');
+    (error as any).statusCode = 500;
+    throw error;
   }
 
+  // Compare password - FIX: Inverted logic!
   const passwordMatch = await user.comparePassword(password);
-  if (passwordMatch) {
-    throw new Error('Invalid email or password');
+  if (!passwordMatch) {  // ✅ FIXED: Should be !passwordMatch
+    const error = new Error('Invalid email or password');
+    (error as any).statusCode = 500;
+    throw error;
   }
 
   const token = generateToken(user);
@@ -80,7 +105,8 @@ const generateToken = (user: IUser): string => {
     email: user.email,
     role: user.role,
   };
+  
   return jwt.sign(payload, secret, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  } as Parameters<typeof jwt.sign>[2]);
+    expiresIn: '7d',
+  });
 };

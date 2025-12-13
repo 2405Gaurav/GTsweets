@@ -1,33 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
 
-export interface AppError extends Error {
-  statusCode?: number;
-}
+// Async handler to wrap async route handlers
+export const asyncHandler = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch((error) => {
+      // Handle errors thrown in async functions
+      const statusCode = (error as any).statusCode || 500;
+      
+      res.status(statusCode).json({
+        error: error.message || 'Internal server error',
+      });
+    });
+  };
+};
 
+// Global error handler middleware
 export const errorHandler = (
-  err: AppError,
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+) => {
   const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-
-  console.error(`[Error] ${statusCode}: ${message}`);
-
-  if (err.name === 'ValidationError') {
-    res.status(400).json({ error: 'Validation error', details: message });
-  } else if (err.name === 'CastError') {
-    res.status(400).json({ error: 'Invalid ID format' });
-  } else if (err.name === 'MongoServerError' && 'code' in err && err.code === 11000) {
-    res.status(409).json({ error: 'Duplicate entry' });
-  } else {
-    res.status(statusCode).json({ error: message });
-  }
+  
+  res.status(statusCode).json({
+    error: err.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  });
 };
-
-export const asyncHandler =
-  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
