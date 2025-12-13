@@ -24,10 +24,12 @@ const cartItemSchema = new Schema<ICartItem>({
   quantity: {
     type: Number,
     required: true,
+    min: [1, 'Quantity must be at least 1'],
   },
   priceAtTime: {
     type: Number,
     required: true,
+    min: [0, 'Price cannot be negative'],
   },
 });
 
