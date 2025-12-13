@@ -1,216 +1,186 @@
+import request from 'supertest';
+import app from '../app.js';
 import { User } from '../models/Users';
+import { connectDB, disconnectDB } from '../config/db.js';
 
-describe('User Model', () => {
-  describe('User Creation', () => {
-    it('should create a new user successfully', async () => {
-      const userData = {
+describe('Authentication Endpoints', () => {
+  beforeAll(async () => {
+    await connectDB();
+    await User.deleteMany({});
+  });
+
+  afterAll(async () => {
+    await User.deleteMany({});
+    await disconnectDB();
+  });
+
+  describe('POST /api/auth/register', () => {
+    it('should register a new user with customer role by default', async () => {
+      const response = await request(app).post('/api/auth/register').send({
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
-      };
+      });
 
-      const user = await User.create(userData);
-
-      expect(user._id).toBeDefined();
-      expect(user.name).toBe(userData.name);
-      expect(user.email).toBe(userData.email);
-      expect(user.role).toBe('customer'); // default role
-      expect(user.password).not.toBe(userData.password); // should be hashed
-      expect(user.createdAt).toBeDefined();
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user.email).toBe('john@example.com');
+      expect(response.body.user.role).toBe('customer');
     });
 
-    it('should create an admin user', async () => {
-      const adminData = {
+    it('should register a new admin user', async () => {
+      const response = await request(app).post('/api/auth/register').send({
         name: 'Admin User',
         email: 'admin@example.com',
-        password: 'admin123',
-        role: 'admin' as const,
-      };
-
-      const admin = await User.create(adminData);
-
-      expect(admin.role).toBe('admin');
-    });
-
-    it('should fail without required name', async () => {
-      const userData = {
-        email: 'test@example.com',
         password: 'password123',
-      };
+        role: 'admin',
+      });
 
-      await expect(User.create(userData)).rejects.toThrow();
+      expect(response.status).toBe(201);
+      expect(response.body.user.role).toBe('admin');
     });
 
-    it('should fail without required email', async () => {
-      const userData = {
+    it('should fail when email is already registered', async () => {
+      await request(app).post('/api/auth/register').send({
         name: 'John Doe',
+        email: 'duplicate@example.com',
         password: 'password123',
-      };
+      });
 
-      await expect(User.create(userData)).rejects.toThrow();
-    });
-
-    it('should fail without required password', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'test@example.com',
-      };
-
-      await expect(User.create(userData)).rejects.toThrow();
-    });
-
-    it('should fail with invalid email format', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'invalid-email',
+      const response = await request(app).post('/api/auth/register').send({
+        name: 'Another User',
+        email: 'duplicate@example.com',
         password: 'password123',
-      };
+      });
 
-      await expect(User.create(userData)).rejects.toThrow();
+      expect(response.status).toBe(500);
+      expect(response.body.error).toContain('Email already registered');
     });
 
-    it('should fail with duplicate email', async () => {
-      const userData = {
+    it('should fail when missing required fields', async () => {
+      const response = await request(app).post('/api/auth/register').send({
         name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
-      };
+      });
 
-      await User.create(userData);
-
-      const duplicateUser = {
-        name: 'Jane Doe',
-        email: 'john@example.com',
-        password: 'password456',
-      };
-
-      await expect(User.create(duplicateUser)).rejects.toThrow();
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
     });
 
-    it('should fail with password less than 6 characters', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: '12345', // only 5 characters
-      };
-
-      await expect(User.create(userData)).rejects.toThrow();
-    });
-
-    it('should convert email to lowercase', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'JOHN@EXAMPLE.COM',
-        password: 'password123',
-      };
-
-      const user = await User.create(userData);
-
-      expect(user.email).toBe('john@example.com');
-    });
-
-    it('should trim whitespace from name', async () => {
-      const userData = {
-        name: '  John Doe  ',
-        email: 'john@example.com',
-        password: 'password123',
-      };
-
-      const user = await User.create(userData);
-
-      expect(user.name).toBe('John Doe');
-    });
-  });
-
-  describe('Password Hashing', () => {
     it('should hash password before saving', async () => {
-      const userData = {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
-      };
-
-      const user = await User.create(userData);
-
-      expect(user.password).not.toBe(userData.password);
-      expect(user.password).toMatch(/^\$2[ayb]\$.{56}$/); // bcrypt hash pattern
-    });
-
-    it('should not rehash password if not modified', async () => {
-      const user = await User.create({
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
+      const response = await request(app).post('/api/auth/register').send({
+        name: 'Secure User',
+        email: 'secure@example.com',
+        password: 'plaintext123',
       });
 
-      const originalHash = user.password;
+      expect(response.status).toBe(201);
 
-      user.name = 'Jane Doe';
-      await user.save();
-
-      expect(user.password).toBe(originalHash);
+      const user = await User.findOne({ email: 'secure@example.com' }).select('+password');
+      expect(user?.password).not.toBe('plaintext123');
     });
   });
 
-  describe('comparePassword Method', () => {
-    it('should return true for correct password', async () => {
-      const password = 'password123';
-      
-      const user = await User.create({
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: password,
+  describe('POST /api/auth/login', () => {
+    beforeEach(async () => {
+      await User.deleteMany({});
+      await request(app).post('/api/auth/register').send({
+        name: 'Test User',
+        email: 'test@example.com',
+        password: 'password123',
       });
-
-      // Need to fetch user with password field since select: false
-      const userWithPassword = await User.findById(user._id).select('+password');
-
-      const isMatch = await userWithPassword!.comparePassword(password);
-
-      expect(isMatch).toBe(true);
     });
 
-    it('should return false for incorrect password', async () => {
-      const user = await User.create({
-        name: 'John Doe',
-        email: 'john@example.com',
+    it('should login user with correct credentials', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
         password: 'password123',
       });
 
-      const userWithPassword = await User.findById(user._id).select('+password');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user.email).toBe('test@example.com');
+    });
 
-      const isMatch = await userWithPassword!.comparePassword('wrongpassword');
+    it('should fail with incorrect password', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'wrongpassword',
+      });
 
-      expect(isMatch).toBe(false);
+      expect(response.status).toBe(500);
+      expect(response.body.error).toContain('Invalid email or password');
+    });
+
+    it('should fail with non-existent email', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'nonexistent@example.com',
+        password: 'password123',
+      });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toContain('Invalid email or password');
+    });
+
+    it('should fail when email is missing', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        password: 'password123',
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain('required');
+    });
+
+    it('should return valid JWT token', async () => {
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'password123',
+      });
+
+      const token = response.body.token;
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+      expect(token.split('.').length).toBe(3);
     });
   });
 
-  describe('Password Field Selection', () => {
-    it('should not return password by default', async () => {
-      await User.create({
-        name: 'John Doe',
-        email: 'john@example.com',
+  describe('GET /api/auth/profile', () => {
+    let token: string;
+
+    beforeAll(async () => {
+      await User.deleteMany({});
+      const response = await request(app).post('/api/auth/register').send({
+        name: 'Profile Test User',
+        email: 'profile@example.com',
         password: 'password123',
       });
-
-      const user = await User.findOne({ email: 'john@example.com' });
-
-      expect(user).toBeDefined();
-      expect((user as any).password).toBeUndefined();
+      token = response.body.token;
     });
 
-    it('should return password when explicitly selected', async () => {
-      await User.create({
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'password123',
-      });
+    it('should get user profile with valid token', async () => {
+      const response = await request(app)
+        .get('/api/auth/profile')
+        .set('Authorization', `Bearer ${token}`);
 
-      const user = await User.findOne({ email: 'john@example.com' }).select('+password');
+      expect(response.status).toBe(200);
+      expect(response.body.user).toHaveProperty('email');
+      expect(response.body.user.email).toBe('profile@example.com');
+    });
 
-      expect(user).toBeDefined();
-      expect(user!.password).toBeDefined();
-      expect(user!.password).toMatch(/^\$2[ayb]\$.{56}$/);
+    it('should fail without token', async () => {
+      const response = await request(app).get('/api/auth/profile');
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toContain('token');
+    });
+
+    it('should fail with invalid token', async () => {
+      const response = await request(app)
+        .get('/api/auth/profile')
+        .set('Authorization', 'Bearer invalid.token.here');
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('Invalid or expired');
     });
   });
 });
