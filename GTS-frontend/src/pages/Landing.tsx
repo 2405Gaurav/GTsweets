@@ -246,12 +246,23 @@ export const Landing = () => {
 
       {/* Simple Footer */}
       <footer className="bg-white border-t-2 border-black py-12 text-center">
-         <div className="flex justify-center items-center gap-2 mb-4">
-            <Candy className="text-pink-500 w-6 h-6" />
-            <span className="font-bold text-xl tracking-tight">SugarRush</span>
-         </div>
-         <p className="text-gray-500"> Designed with high sugar content By Gaurav Thakur.</p>
-      </footer>
+   <div className="flex justify-center items-center gap-2 mb-4">
+      <Candy className="text-pink-500 w-6 h-6" />
+      <span className="font-bold text-xl tracking-tight">SugarRush</span>
+   </div>
+   <p className="text-gray-500">
+      Designed with high sugar content By{' '}
+      <a 
+         href="https://thegauravthakur.in" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         className="text-pink-500 hover:text-pink-600 font-semibold underline decoration-2 underline-offset-2 transition-colors"
+      >
+         Gaurav Thakur
+      </a>
+      .
+   </p>
+</footer>
     </div>
   );
 };

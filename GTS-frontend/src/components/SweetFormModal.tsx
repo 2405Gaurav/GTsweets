@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import type { Sweet, CreateSweetRequest } from '../types';
 
 interface SweetFormModalProps {
@@ -10,7 +10,7 @@ interface SweetFormModalProps {
   sweet?: Sweet | null;
 }
 
-const categories = ['cake', 'candy', 'chocolate', 'lollipop', 'cookie'];
+const categories = ['all', 'cake', 'candy', 'chocolate','cookie','Halwa','Milk based','Dry fruit Based','Syrup based'];
 
 export const SweetFormModal = ({ isOpen, onClose, onSubmit, sweet }: SweetFormModalProps) => {
   const [formData, setFormData] = useState<CreateSweetRequest>({
@@ -58,6 +58,9 @@ export const SweetFormModal = ({ isOpen, onClose, onSubmit, sweet }: SweetFormMo
     }
   };
 
+  const inputClass = "w-full px-4 py-3 border-2 border-black rounded-xl font-bold bg-white focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:-translate-y-1 transition-all placeholder:font-medium placeholder:text-gray-400";
+  const labelClass = "block text-xs font-black uppercase text-gray-700 mb-1 tracking-wide";
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -67,140 +70,144 @@ export const SweetFormModal = ({ isOpen, onClose, onSubmit, sweet }: SweetFormMo
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           />
 
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border-4 border-pink-200"
+            className="relative bg-white rounded-2xl border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="sticky top-0 bg-white border-b-2 border-gray-100 p-6 flex items-center justify-between">
-              <h2 className="text-3xl font-bold text-gray-800">
-                {sweet ? 'Edit Sweet' : 'Add New Sweet'}
+            {/* Header */}
+            <div className="sticky top-0 bg-yellow-400 border-b-4 border-black p-5 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-black text-black uppercase tracking-tighter">
+                {sweet ? 'Edit Treat' : 'New Sweet'}
               </h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-1.5 bg-white border-2 border-black rounded-lg hover:bg-red-500 hover:text-white transition-colors active:translate-y-1"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors"
-                  placeholder="Chocolate Bar"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
-                <select
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors capitalize"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat} className="capitalize">
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Price ($)</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="col-span-1 md:col-span-2">
+                  <label className={labelClass}>Sweet Name</label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({ ...formData, price: parseFloat(e.target.value) })
-                    }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors"
-                    placeholder="2.50"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className={inputClass}
+                    placeholder="e.g. Super Sour Gummy"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Quantity</label>
-                  <input
-                    type="number"
+                  <label className={labelClass}>Category</label>
+                  <select
                     required
-                    min="0"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      setFormData({ ...formData, quantity: parseInt(e.target.value) })
-                    }
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors"
-                    placeholder="100"
-                  />
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className={`${inputClass} capitalize cursor-pointer`}
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                <textarea
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={4}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors resize-none"
-                  placeholder="Delicious milk chocolate bar"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Image URL (optional)
-                </label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-pink-400 focus:outline-none transition-colors"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {formData.imageUrl && (
-                  <div className="mt-3 relative h-40 rounded-lg overflow-hidden border-2 border-gray-200">
-                    <img
-                      src={formData.imageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://via.placeholder.com/300x200/FF69B4/FFFFFF?text=Invalid+URL';
-                      }}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                      className={inputClass}
                     />
                   </div>
-                )}
+                  <div>
+                    <label className={labelClass}>Stock</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className={labelClass}>Description</label>
+                  <textarea
+                    required
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className={`${inputClass} resize-none`}
+                    placeholder="Describe the flavor explosion..."
+                  />
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className={labelClass}>Image URL</label>
+                  <div className="flex gap-3 items-start">
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      className={inputClass}
+                      placeholder="https://..."
+                    />
+                    {formData.imageUrl && (
+                      <div className="w-20 h-14 shrink-0 rounded-lg border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-gray-100">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://placehold.co/100?text=x';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-4 border-t-2 border-dashed border-gray-300">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg transition-colors"
+                  className="flex-1 px-4 py-3 bg-white text-black border-2 border-black font-black uppercase rounded-xl hover:bg-gray-100 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold rounded-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-pink-500 text-white border-2 border-black font-black uppercase rounded-xl hover:bg-pink-600 active:shadow-none active:translate-x-[2px] active:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Saving...' : sweet ? 'Update Sweet' : 'Add Sweet'}
+                  {isSubmitting ? (
+                    'Saving...'
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      {sweet ? 'Update' : 'Create'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
