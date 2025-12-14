@@ -252,7 +252,7 @@ The frontend will run on `http://localhost:5173`
 *Browse through our collection of delicious sweets*
 
 ### Admin Dashboard
-![Admin Dashboard](./public/assets/screeshots/admin-dashboard.png)
+![Admin Dashboard](.GTS-frontend/public/assets/screeshots/admin-dashboard.png)
 *Manage inventory, add new sweets, and track stock*
 
 ### Authentication
