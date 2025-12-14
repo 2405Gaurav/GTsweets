@@ -248,19 +248,19 @@ The frontend will run on `http://localhost:5173`
 ## 📸 Application Screenshots
 
 ### Homepage - Sweet Catalog
-![Sweet Catalog](./public/assets/screeshots/homepage.png)
+![Sweet Catalog](./GTS-frontend/public/assets/screeshots/homepage.png)
 *Browse through our collection of delicious sweets*
 
 ### Admin Dashboard
-![Admin Dashboard](.GTS-frontend/public/assets/screeshots/admin-dashboard.png)
+![Admin Dashboard](./GTS-frontend/public/assets/screeshots/admin-dashboard.png)
 *Manage inventory, add new sweets, and track stock*
 
 ### Authentication
-![Login Page](./public/assets/screeshots/login.png)
+![Login Page](./GTS-frontend/public/assets/screeshots/login.png)
 *Secure authentication with JWT tokens*
 
 ### User Dashboard
-![User Dashboard](./public/assets/screeshots/userdb.png)
+![User Dashboard](./GTS-frontend/public/assets/screeshots/userdb.png)
 *View past orders and account details*
 ## 🧪 Running Tests
 
