@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { useAuth } from './AuthContext';
+import { cartApi } from '../services/api'; 
 
 interface CartItem {
   _id: string;
@@ -46,7 +47,8 @@ interface CartContextType {
 }
 
 interface ApiErrorResponse {
-  error: string;
+  error?: string;
+  message?: string;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -77,30 +79,22 @@ export const CartProvider = ({ children }: CartProviderProps) => {
 
   const { isAuthenticated } = useAuth();
 
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem('token');
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-  }, []);
-
   const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('http://localhost:5000/api/cart', getAuthHeaders());
-      setCart(response.data.cart);
-      setCartSummary(response.data.summary);
+      const response = await cartApi.getCart();
+      setCart(response.cart);
+      setCartSummary(response.summary);
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
       console.error('Error fetching cart:', axiosError);
-      setError(axiosError.response?.data?.error || 'Failed to fetch cart');
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to fetch cart';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders]);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -115,17 +109,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.post(
-        'http://localhost:5000/api/cart/items',
-        { sweetId, quantity },
-        getAuthHeaders()
-      );
-      setCart(response.data.cart);
-      setCartSummary(response.data.summary);
+      const response = await cartApi.addItem(sweetId, quantity);
+      setCart(response.cart);
+      setCartSummary(response.summary);
       return { success: true };
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      const errorMsg = axiosError.response?.data?.error || 'Failed to add to cart';
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to add to cart';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -137,17 +127,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.put(
-        `http://localhost:5000/api/cart/items/${itemId}`,
-        { quantity },
-        getAuthHeaders()
-      );
-      setCart(response.data.cart);
-      setCartSummary(response.data.summary);
+      const response = await cartApi.updateItem(itemId, quantity);
+      setCart(response.cart);
+      setCartSummary(response.summary);
       return { success: true };
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      const errorMsg = axiosError.response?.data?.error || 'Failed to update quantity';
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update quantity';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -159,16 +145,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.delete(
-        `http://localhost:5000/api/cart/items/${itemId}`,
-        getAuthHeaders()
-      );
-      setCart(response.data.cart);
-      setCartSummary(response.data.summary);
+      const response = await cartApi.removeItem(itemId);
+      setCart(response.cart);
+      setCartSummary(response.summary);
       return { success: true };
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      const errorMsg = axiosError.response?.data?.error || 'Failed to remove item';
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to remove item';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -180,13 +163,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.delete('http://localhost:5000/api/cart', getAuthHeaders());
-      setCart(response.data.cart);
+      const response = await cartApi.clearCart();
+      setCart(response.cart);
       setCartSummary({ itemCount: 0, subtotal: 0, tax: 0, total: 0 });
       return { success: true };
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      const errorMsg = axiosError.response?.data?.error || 'Failed to clear cart';
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to clear cart';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
@@ -198,7 +181,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     try {
       setLoading(true);
       setError(null);
-      await axios.post('http://localhost:5000/api/cart/checkout', {}, getAuthHeaders());
+      await cartApi.checkout();
       if (cart) {
         setCart({ ...cart, items: [], status: 'completed' });
       }
@@ -206,7 +189,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
       return { success: true };
     } catch (err) {
       const axiosError = err as AxiosError<ApiErrorResponse>;
-      const errorMsg = axiosError.response?.data?.error || 'Checkout failed';
+      const errorMsg = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Checkout failed';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     } finally {
