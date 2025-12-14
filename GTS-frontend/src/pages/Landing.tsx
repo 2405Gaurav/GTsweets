@@ -265,34 +265,27 @@ export const Landing = () => {
       </section>
 
       {/* Simple Footer */}
-      <footer className="bg-white border-t-2 border-black py-12 text-center">
-         <Link to="/" className="flex items-center gap-3 group">
-  <motion.div
-    whileHover={{ rotate: 180, scale: 1.1 }}
-    transition={{ type: "spring", stiffness: 200 }}
-    className="bg-black text-white p-2 rounded-lg border-2 border-transparent group-hover:bg-pink-500 group-hover:border-black transition-colors"
-  >
-    <Candy className="w-6 h-6" />
-  </motion.div>
-  <img 
-    src="/assets/gts.png" 
-    alt="SugarRush" 
-    className="h-8 w-auto"
-  />
-</Link>
-        <p className="text-gray-500">
-            Designed with high sugar content By{' '}
-            <a 
-              href="https://thegauravthakur.in" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-pink-500 hover:text-pink-600 font-semibold underline decoration-2 underline-offset-2 transition-colors"
-            >
-              Gaurav Thakur
-            </a>
-            .
-        </p>
-      </footer>
+    <footer className="bg-white border-t-2 border-black py-12 text-center">
+  <div className="flex justify-center mb-4">
+    <img 
+      src="/assets/gts.png" 
+      alt="SugarRush" 
+      className="h-12 w-auto"
+    />
+  </div>
+  <p className="text-gray-500">
+    Designed with high sugar content By{' '}
+    <a 
+      href="https://thegauravthakur.in" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="text-pink-500 hover:text-pink-600 font-semibold underline decoration-2 underline-offset-2 transition-colors"
+    >
+      Gaurav Thakur
+    </a>
+    .
+  </p>
+</footer>
     </div>
   );
 };
