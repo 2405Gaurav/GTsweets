@@ -19,8 +19,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Handle preflight requests - FIXED: Use regex pattern instead of '*'
-app.options('/(.*)', cors(corsOptions));
+// Handle preflight requests - FIXED: Remove path parameter
+app.options(cors(corsOptions));
 
 // Body parser middleware
 app.use(express.json());
