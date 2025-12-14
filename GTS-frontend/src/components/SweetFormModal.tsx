@@ -15,7 +15,7 @@ const categories = ['all', 'cake', 'candy', 'chocolate','cookie','Halwa','Milk b
 export const SweetFormModal = ({ isOpen, onClose, onSubmit, sweet }: SweetFormModalProps) => {
   const [formData, setFormData] = useState<CreateSweetRequest>({
     name: '',
-    category: 'candy',
+    category: 'all',
     price: 0,
     quantity: 0,
     description: '',
